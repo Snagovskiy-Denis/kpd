@@ -37,7 +37,11 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,pytz,Django==3.2,kivy,kivymd,android,asgiref==3.5.2,webview-android==0.10
+requirements = python3,pytz,Django==3.2,kivy,kivymd,android,asgiref==3.5.2,webview-android==0.10,Cython==0.29.30
+
+#requirements = appdirs==1.4.4,asgiref==3.5.2,backports.weakref==1.0.post1,buildozer==1.3.0,certifi==2022.5.18.1,charset-normalizer==2.0.12,colorama==0.4.4,Cython==0.29.30,distlib==0.3.4,Django==3.2,docutils==0.18.1,filelock==3.7.0,idna==3.3,importlib-metadata==4.11.4,Jinja2==3.1.2,Kivy==2.1.0,Kivy-Garden==0.1.5,kivymd==0.104.2,MarkupSafe==2.1.1,pep517==0.6.0,pexpect==4.8.0,Pillow==9.1.1,platformdirs==2.5.2,ptyprocess==0.7.0,Pygments==2.12.0,pyjnius==1.4.1,pytoml==0.1.21,pytz==2022.1,requests==2.27.1,sh==1.14.2,six==1.16.0,sqlparse==0.4.2,toml==0.10.2,urllib3==1.26.9,virtualenv==20.14.1,zipp==3.8.0
+#requirements = python3,appdirs==1.4.4,asgiref==3.5.2,backports.weakref==1.0.post1,buildozer==1.3.0,certifi==2022.5.18.1,charset-normalizer==2.0.12,colorama==0.4.4,Cython==0.29.30,distlib==0.3.4,Django==3.2,docutils==0.18.1,filelock==3.7.0,idna==3.3,importlib-metadata==4.11.4,Jinja2==3.1.2,Kivy==2.1.0,Kivy-Garden==0.1.5,MarkupSafe==2.1.1,pep517==0.6.0,pexpect==4.8.0,platformdirs==2.5.2,ptyprocess==0.7.0,Pygments==2.12.0,pytoml==0.1.21,pytz==2022.1,requests==2.27.1,sh==1.14.2,six==1.16.0,sqlparse==0.4.2,toml==0.10.2,urllib3==1.26.9,virtualenv==20.14.1,zipp==3.8.0,webview-android==0.10
+
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
