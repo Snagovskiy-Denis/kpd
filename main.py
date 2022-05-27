@@ -11,12 +11,15 @@ logging.debug('Django version - %s', django.get_version())
 
 
 #=========== django backend ========
-from django.conf import settings
-from django.urls import path
-from django.http import HttpResponse
-
-
-logging.debug('django imports done')
+try:
+    from django.conf import settings
+    from django.urls import path
+    from django.http import HttpResponse
+except ModuleNotFoundError as error:
+    logging.error('Error during import. Are python and django versions compatible?\n%s', error)
+    raise error
+else:
+    logging.debug('django imports done')
 
 
 settings.configure(
@@ -33,6 +36,7 @@ urlpatterns = [path('', lambda request: HttpResponse('Hello, World!'))]
 from multiprocessing import Process, freeze_support
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
+from kivy.utils import platform
 from kivy.lang import Builder
 from requests import get, ConnectionError
 
@@ -78,30 +82,63 @@ class MyApp(App):
 
 
 if __name__ == '__main__':
-    Builder.load_string('''
-<ServerBox>:
-    orientation: 'vertical'
-
-    but_1: but_1
-    but_2: but_2
-    response_label: lab_1
-
-    Button:
-        id: but_1
-        font_size: 20
-        text: 'Start server'
-        on_press: root.runserver()
-
-    Label:
-        id: lab_1
-        font_size: 20
-        text: 'Waiting for a tap'
-
-    Button:
-        id: but_2
-        font_size: 20
-        text: 'GET / HTTP/1.1'
-        on_press: root.request_server()
-''')
+    logging.info('Current platform - %s', platform)
     freeze_support()
-    MyApp().run()
+    if platform == 'linux':
+        Builder.load_string('''
+    <ServerBox>:
+        orientation: 'vertical'
+
+        but_1: but_1
+        but_2: but_2
+        response_label: lab_1
+
+        Button:
+            id: but_1
+            font_size: 20
+            text: 'Start server'
+            on_press: root.runserver()
+
+        Label:
+            id: lab_1
+            font_size: 20
+            text: 'Waiting for a tap'
+
+        Button:
+            id: but_2
+            font_size: 20
+            text: 'GET / HTTP/1.1'
+            on_press: root.request_server()
+    ''')
+
+        MyApp().run()
+
+    elif platform == 'android':
+
+        from kivy.uix.widget import Widget
+        from kivymd.app import MDApp
+        from webview import WebView
+        from kivymd.uix.button import MDFlatButton
+        from kivymd.uix.screen import MDScreen
+
+        Builder.load_string("""
+        <MyWebView>
+            MDFlatButton:
+                text: "Push"
+                pos_hint: {"center_x": .5, "center_y": .4}
+                on_press: root.Push()
+        """)
+
+        class MyWebView(MDScreen):
+            def Push(self):
+                WebView("https://www.google.com")
+
+        class MyWebApp(MDApp):
+            def build(self):
+                return MyWebView()
+
+        MyWebApp().run()
+
+    else:
+        raise Exception('Unsupported')
+

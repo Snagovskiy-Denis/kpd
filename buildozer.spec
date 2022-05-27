@@ -37,7 +37,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,pytz,Django==3.2,kivy,kivymd,android,asgiref==3.5.2
+requirements = python3,pytz,Django==3.2,kivy,kivymd,android,asgiref==3.5.2,webview-android==0.10
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
