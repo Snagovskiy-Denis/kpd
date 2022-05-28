@@ -1,25 +1,7 @@
-import logging
-logging.basicConfig(level=logging.DEBUG)
-logging.info('Initialize module')
-
-
-import sys
-import django
-logging.debug(sys.version_info)
-logging.debug('Django version - %s', django.get_version())
-
-
-
 #=========== django backend ========
-try:
-    from django.conf import settings
-    from django.urls import path
-    from django.http import HttpResponse
-except ModuleNotFoundError as error:
-    logging.error('Error during import. Are python and django versions compatible?\n%s', error)
-    raise error
-else:
-    logging.debug('django imports done')
+from django.conf import settings
+from django.urls import path
+from django.http import HttpResponse
 
 
 settings.configure(
@@ -36,109 +18,61 @@ urlpatterns = [path('', lambda request: HttpResponse('Hello, World!'))]
 from multiprocessing import Process, freeze_support
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.widget import Widget
+from kivy.clock import Clock
+
 from kivy.utils import platform
-from kivy.lang import Builder
-from requests import get, ConnectionError
+
+if platform == 'android':
+    from jnius import autoclass
+    from android.runnable import run_on_ui_thread
+
+    WebView = autoclass('android.webkit.WebView')
+    WebViewClient = autoclass('android.webkit.WebViewClient')
+    activity = autoclass('org.kivy.android.PythonActivity').mActivity
+else:
+    if settings.DEBUG is False:
+        raise NotImplementedError('Supports Android platform only')
+    run_on_ui_thread = lambda function: function
+    WebView = None
+    WebViewClient = None
+    activity = None
 
 
-def build_url(host: str, port: int) -> str:
-    return ':'.join((host, str(port)))
+HOST = '.'.join('0' * 4)
+PORT = 8080
+
+URL = ':'.join((HOST, str(PORT)))
+SCHEMA = 'http://'
 
 
-def runserver(host: str, port: int) -> None:
+def create_server(host: str, port: int) -> None:
     from django.core.management import execute_from_command_line
-    logging.info('Starting server at %s:%s', host, port)
-    execute_from_command_line([__name__, 'runserver', '--noreload', build_url(host, port)])
+    execute_from_command_line([__name__, 'runserver', '--noreload', URL])
 
 
-def request_server(host: str, port: int) -> str:
-    url = build_url(host, port)
-    logging.info('GET %s', url)
-    try:
-        return 'Response: ' + get('http://' + url).text
-    except ConnectionError:
-        logging.error('ConnectionError')
-        return 'Server is down!'
-    except Exception as e:
-        logging.error('%s', e)
-        return 'Unexpected error!'
+@run_on_ui_thread
+def create_webview(*args):
+    webview = WebView(activity)
+    webview.getSettings().setJavaScriptEnabled(True)
+    wvc = WebViewClient()
+    webview.setWebViewClient(wvc)
+    activity.setContentView(webview)
+    webview.loadUrl(SCHEMA + URL)
 
 
-class ServerBox(BoxLayout):
-    host = '.'.join('0' * 4)
-    port = 8080
-
-    def runserver(self):
-        Process(target=runserver, args=(self.host, self.port)).start()
-        self.response_label.text = 'Start server...'
-
-    def request_server(self):
-        self.response_label.text = request_server(self.host, self.port)
+class WebviewWidget(Widget):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Clock.schedule_once(create_webview, 0)
 
 
-class MyApp(App):
+class ServiceApp(App):
     def build(self):
-        return ServerBox()
+        Process(target=create_server, args=(HOST, PORT)).start()
+        return WebviewWidget()
 
 
 if __name__ == '__main__':
-    logging.info('Current platform - %s', platform)
     freeze_support()
-    if platform == 'linux':
-        Builder.load_string('''
-    <ServerBox>:
-        orientation: 'vertical'
-
-        but_1: but_1
-        but_2: but_2
-        response_label: lab_1
-
-        Button:
-            id: but_1
-            font_size: 20
-            text: 'Start server'
-            on_press: root.runserver()
-
-        Label:
-            id: lab_1
-            font_size: 20
-            text: 'Waiting for a tap'
-
-        Button:
-            id: but_2
-            font_size: 20
-            text: 'GET / HTTP/1.1'
-            on_press: root.request_server()
-    ''')
-
-        MyApp().run()
-
-    elif platform == 'android':
-
-        from kivy.uix.widget import Widget
-        from kivymd.app import MDApp
-        from webview import WebView
-        from kivymd.uix.button import MDFlatButton
-        from kivymd.uix.screen import MDScreen
-
-        Builder.load_string("""
-        <MyWebView>
-            MDFlatButton:
-                text: "Push"
-                pos_hint: {"center_x": .5, "center_y": .4}
-                on_press: root.Push()
-        """)
-
-        class MyWebView(MDScreen):
-            def Push(self):
-                WebView("https://www.google.com")
-
-        class MyWebApp(MDApp):
-            def build(self):
-                return MyWebView()
-
-        MyWebApp().run()
-
-    else:
-        raise Exception('Unsupported')
-
+    ServiceApp().run()
